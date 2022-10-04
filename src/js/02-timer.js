@@ -1,9 +1,17 @@
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
 const datetimeRef = document.querySelector('#datetime-picker');
 const startBtnRef = document.querySelector('[data-start]');
-let timerDeadline = null;
+
+let currentDate = Date.now();
+let futureDate = null;
+
+startBtnRef.setAttribute('disbled', '');
+startBtnRef.addEventListener('click', () => {
+    timer.onStart();
+});
 
 const options = {
     enableTime: true,
@@ -12,14 +20,20 @@ const options = {
     minuteIncrement: 1,
     onClose(selectedDates) {
     console.log(selectedDates[0]);
-    timerDeadline = selectedDates[0].getTime();
+    futureDate = selectedDates[0]; 
 
-    if (timerDeadline < Date.now()) {
-        alert('Please choose a date in the future');
-        startBtnRef.setAttribute('disabled', false);
+    if (selectedDates[0] < currentDate) {
+        Notify.failure('Please choose a date in the future', {
+            position: 'center-center',
+            cssAnimationStyle: 'from-top',
+            backOverlay: true,
+            clickToClose: true,
+            closeButton: true,
+        });
+        startBtnRef.setAttribute('disabled', '');
     } else {
-        startBtnRef.toggleAttribute('disabled');
-    }
+        startBtnRef.removeAttribute('disabled');
+    };
     },
 };
 
@@ -27,7 +41,6 @@ flatpickr(datetimeRef, options);
 
 const timer = {
     intervalId: null,
-    isActive: false,
     refs: {
         daysRef: document.querySelector('[data-days]'),
         hoursRef: document.querySelector('[data-hours]'),
@@ -35,44 +48,35 @@ const timer = {
         secondsRef: document.querySelector('[data-seconds]'),
     },
 
-    start() {
-        if(this.isActive) {
-            return;
-        }
-
-        timerDeadline = new Date();
-        this.isActive = true;
+    onStart() {
+        Notify.success('Welcome to the future!', {
+            position: 'center-center',
+        });
 
         this.intervalId = setInterval(() => {
-            const currentTime = Date.now();
-            const delta = timerDeadline - currentTime;
+            const deltaTime = futureDate - new Date();
+            const timerComponents = this.convertMs(deltaTime);
 
-            // if (delta <= 0) {
-            //     clearInterval(this.intervalId);
-            // }
-
-            const { days, hours, minutes, seconds } = this.convertMs(delta);
-            this.refs.daysRef.textContent = this.addLeadingZero(days);
-            this.refs.hoursRef.textContent = this.addLeadingZero(hours);
-            this.refs.minutesRef.textContent = this.addLeadingZero(minutes);
-            this.refs.secondsRef.textContent = this.addLeadingZero(seconds);
-        }, 1000)
+            if (deltaTime <= 1000) {
+                clearInterval(this.intervalId);
+            }
+            
+            this.refs.daysRef.textContent = this.addLeadingZero(timerComponents.days);
+            this.refs.hoursRef.textContent = this.addLeadingZero(timerComponents.hours);
+            this.refs.minutesRef.textContent = this.addLeadingZero(timerComponents.minutes);
+            this.refs.secondsRef.textContent = this.addLeadingZero(timerComponents.seconds);
+        }, 1000);
     },
 
     convertMs(ms) {
-        // Number of milliseconds per unit of time
         const second = 1000;
         const minute = second * 60;
         const hour = minute * 60;
         const day = hour * 24;
-    
-        // Remaining days
+
         const days = Math.floor(ms / day);
-        // Remaining hours
         const hours = Math.floor((ms % day) / hour);
-        // Remaining minutes
         const minutes = Math.floor(((ms % day) % hour) / minute);
-        // Remaining seconds
         const seconds = Math.floor((((ms % day) % hour) % minute) / second);
     
         return { days, hours, minutes, seconds };
@@ -81,6 +85,4 @@ const timer = {
     addLeadingZero(value) {
         return String(value).padStart(2, '0');
     },
-}
-startBtnRef.addEventListener('click', timer.start.bind(timer));
-
+};
