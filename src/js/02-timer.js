@@ -9,9 +9,6 @@ let currentDate = Date.now();
 let futureDate = null;
 
 startBtnRef.setAttribute('disbled', '');
-startBtnRef.addEventListener('click', () => {
-    timer.onStart();
-});
 
 const options = {
     enableTime: true,
@@ -22,7 +19,7 @@ const options = {
     console.log(selectedDates[0]);
     futureDate = selectedDates[0]; 
 
-    if (selectedDates[0] < currentDate) {
+    if (currentDate > selectedDates[0]) {
         Notify.failure('Please choose a date in the future', {
             position: 'center-center',
             cssAnimationStyle: 'from-top',
@@ -31,6 +28,7 @@ const options = {
             closeButton: true,
         });
         startBtnRef.setAttribute('disabled', '');
+        return;
     } else {
         startBtnRef.removeAttribute('disabled');
     };
@@ -86,3 +84,7 @@ const timer = {
         return String(value).padStart(2, '0');
     },
 };
+
+startBtnRef.addEventListener('click', () => {
+    timer.onStart();
+});
