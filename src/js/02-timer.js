@@ -2,13 +2,23 @@ import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
-const datetimeRef = document.querySelector('#datetime-picker');
-const startBtnRef = document.querySelector('[data-start]');
+const refs = {
+    datetime: document.querySelector('#datetime-picker'),
+    startBtn: document.querySelector('[data-start]'),
+}
+
+const notifyOpt = {
+    position: 'center-center',
+    cssAnimationStyle: 'from-top',
+    backOverlay: true,
+    clickToClose: true,
+    closeButton: true,
+}
 
 let currentDate = Date.now();
 let futureDate = null;
 
-startBtnRef.setAttribute('disbled', '');
+refs.startBtn.setAttribute('disbled', '');
 
 const options = {
     enableTime: true,
@@ -20,22 +30,17 @@ const options = {
     futureDate = selectedDates[0]; 
 
     if (currentDate > selectedDates[0]) {
-        Notify.failure('Please choose a date in the future', {
-            position: 'center-center',
-            cssAnimationStyle: 'from-top',
-            backOverlay: true,
-            clickToClose: true,
-            closeButton: true,
-        });
-        startBtnRef.setAttribute('disabled', '');
+        Notify.failure('Please choose a date in the future', notifyOpt);
+        refs.startBtn.setAttribute('disabled', '');
         return;
-    } else {
-        startBtnRef.removeAttribute('disabled');
+    } 
+    else {
+        refs.startBtn.removeAttribute('disabled');
     };
     },
 };
 
-flatpickr(datetimeRef, options);
+flatpickr(refs.datetime, options);
 
 const timer = {
     intervalId: null,
@@ -47,9 +52,7 @@ const timer = {
     },
 
     onStart() {
-        Notify.success('Welcome to the future!', {
-            position: 'center-center',
-        });
+        Notify.success('Welcome to the future!', notifyOpt);
 
         this.intervalId = setInterval(() => {
             const deltaTime = futureDate - new Date();
@@ -85,6 +88,6 @@ const timer = {
     },
 };
 
-startBtnRef.addEventListener('click', () => {
+refs.startBtn.addEventListener('click', () => {
     timer.onStart();
 });
